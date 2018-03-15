@@ -1,0 +1,10 @@
+rpmbuild/
+build/
+
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.coverage
+
+*.swp
