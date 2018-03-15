@@ -1,4 +1,5 @@
 %global pypi_name rpmbuild-chain
+%global module_name rpmbuild_chain
 
 Name:           python-%{pypi_name}
 Version:        0.9
@@ -71,15 +72,15 @@ Requires:       python
 %{_bindir}/rpmbuild-chain
 #%{_bindir}/rpmbuild-chain-2
 #%{_bindir}/rpmbuild-chain-%{python2_version}
-%{python2_sitelib}/%{pypi_name}
-%{python2_sitelib}/%{pypi_name}-%{version}-py?.?.egg-info
+%{python2_sitelib}/%{module_name}
+%{python2_sitelib}/%{module_name}-%{version}-py?.?.egg-info
 
 #%files -n python%{python3_pkgversion}-%{pypi_name}
 ##%doc 
 #%{_bindir}/rpmbuild-chain-3
 #%{_bindir}/rpmbuild-chain-%{python3_version}
-#%{python3_sitelib}/%{pypi_name}
-#%{python3_sitelib}/%{pypi_name}-%{version}-py?.?.egg-info
+#%{python3_sitelib}/%{module_name}
+#%{python3_sitelib}/%{module_name}-%{version}-py?.?.egg-info
 
 #%files -n python-%{pypi_name}-doc
 #%doc html 

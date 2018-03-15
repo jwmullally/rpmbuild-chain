@@ -1,4 +1,4 @@
-PKG=python-rpmbuild_chain
+PKG=python-rpmbuild-chain
 VER=0.9
 
 all: rpm

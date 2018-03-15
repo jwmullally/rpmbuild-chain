@@ -10,7 +10,7 @@ def get_version():
         raise RuntimeError('Unable to find version string')
 
 setup(
-    name='rpmbuild_chain',
+    name='rpmbuild-chain',
     packages=['rpmbuild_chain'],
     install_requires=[
         ],
