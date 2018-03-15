@@ -1,11 +1,11 @@
-%global pypi_name rpmbuild_chain
+%global pypi_name rpmbuild-chain
 
 Name:           python-%{pypi_name}
 Version:        0.9
 Release:        1%{?dist}
 Summary:        Build a series of SRPMs with rpmbuild
 License:        MIT
-URL:            https://github.com/jwmullally/rpmbuild_chain
+URL:            https://github.com/jwmullally/rpmbuild-chain
 Source0:        %{name}-%{version}.tar.gz
 BuildArch:      noarch
  

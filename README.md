@@ -70,7 +70,7 @@ specified non-root user to improve security.
 
 Patches for fixes are welcome.
 
-- Run "make integ" before opning a pull request. You will be prompted to run sudo to execute the test
+- Run "make integ" before opening a pull request. You will be prompted to run sudo to execute the test.
 
 
 ## Author
