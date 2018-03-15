@@ -4,26 +4,26 @@ This program builds a series of SRPMs with rpmbuild.
 
 Each resulting RPM is added to a local YUM repository, making them
 available as build dependencies for subsequent SRPMs. This is similar
-in operation to mockchain, except the RPM is built in the local system
+in operation to mockchain, except the RPMs are built in the local system
 instead of a dedicated build chroot. This is useful for building a small
 series of RPMs that will be installed onto the same system, e.g. during
 container builds.
 
-Optionally, any RPMs installed/removed during the build can be
-rolled back, provided they are still available in the configured YUM
-repositories.
+Optionally, any RPMs installed or removed to satisify build dependencies
+can be rolled back after the build has finished, provided they are still
+available in the configured YUM repositories.
 
 Warning: Installed packages and changes to the system may unknowingly
-affect the produced RPMs. In almost every case, mock/mockchain is the
-recommended way to build RPMs using consistent reproducible clean
-buildroots, especially if they are to be redistributed to other
-systems. When satisifying build-dependencies, some packages may be
-temporarily uninstalled, so its not recommended to run this on live
-production hosts.
+affect the produced RPMs between builds. In almost every case,
+mock/mockchain is the recommended way to build RPMs using consistent
+reproducible clean buildroots, especially if they are to be redistributed
+to other systems. When satisifying build-dependencies, some packages
+may be temporarily uninstalled, so its not recommended to run this on
+live production hosts.
 
-This program must be run as "root" in order to install build
-dependencies. All other build commands are executed under the specified
-non-root user to improve security.
+This program must be run as "root" in order to install any missing build
+dependencies. All other commands (e.g. rpmbuild) are executed under the
+specified non-root user to improve security.
 """
 
 # URL: https://github.com/jwmullally/rpmbuild_chain
