@@ -528,25 +528,22 @@ class Plugin_PackageState(Plugin):
 
     def pre_build(self):
         with gzip.open('installed_pkgs.log.gz', 'w') as ipl:
-            self.user.run_cmd(['rpm', '-qa', '--qf', self.PKG_STATE_QF],
-                verbose=False, outfile=ipl)
+            self.user.run_cmd(['rpm', '-qa', '--qf', self.PKG_STATE_QF], outfile=ipl, verbose=False)
 
 
 class Plugin_ParsedSpec(Plugin):
 
     def pre_build(self):
         spec = glob.glob('SPECS/*')[0]
-        _, pspec = self.user.run_cmd(['rpmspec', '-P', spec])
         with open('{}.parsed'.format(spec), 'w') as pspec_out:
-            pspec_out.write(pspec)
+            self.user.run_cmd(['rpmspec', '-P', spec], outfile=pspec_out)
 
 
 class Plugin_Lint(Plugin):
 
     def post_build(self):
         with open('rpmlint.log', 'w') as rpmlint_log:
-            self.user.run_cmd(['rpmlint'] + glob.glob('*.rpm'), 
-                    outfile=rpmlint_log)
+            self.user.run_cmd(['rpmlint'] + glob.glob('*.rpm'), outfile=rpmlint_log)
 
 
 def main(args):
