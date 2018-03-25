@@ -28,18 +28,20 @@ specified non-root user to improve security.
 
 ## Usage
 
-    usage: __main__.py [-h] [--srpms SRPMS [SRPMS ...]] --user USER
+    usage: rpmbuild-chain [-h] [--srpms SRPMS [SRPMS ...]] --user USER
                        [--repo-path REPO_PATH] [--repo-name REPO_NAME]
-                       [--build-path BUILD_PATH] [--no-rollback-builddep]
-                       [--keep-repo-config] [--allow-scriptlets]
-                       [--hookdir HOOKDIR [HOOKDIR ...]] [--lint] [--verbose]
-                       [--version]
-    
+                       [--build-path BUILD_PATH] [--order ORDER [ORDER ...]]
+                       [--order-files ORDER_FILES [ORDER_FILES ...]]
+                       [--no-rollback-builddep] [--keep-repo-config]
+                       [--allow-scriptlets] [--hookdir HOOKDIR [HOOKDIR ...]]
+                       [--lint] [--verbose] [--version]
+
     optional arguments:
       -h, --help            show this help message and exit
       --srpms SRPMS [SRPMS ...]
-                            Input SRPM files to build. Use "-" to read list from
-                            STDIN (default: None)
+                            Input SRPM files to build. If directory, recursively
+                            scan for RPMs. Use "-" to read list from STDIN
+                            (default: [])
       --user USER           Non-privileged user to run rpmbuild (default: None)
       --repo-path REPO_PATH
                             Destination directory to store the built RPMs
@@ -50,6 +52,11 @@ specified non-root user to improve security.
       --build-path BUILD_PATH
                             Directory to build the RPMs in. Use tmpfs for faster
                             builds. Default: tmpdir (default: None)
+      --order ORDER [ORDER ...]
+                            Package build order, given by list of package names
+                            (default: [])
+      --order-files ORDER_FILES [ORDER_FILES ...]
+                            Read --order from files (default: [])
       --no-rollback-builddep
                             Do not automatically rollback installed RPM
                             BuildRequires (default: False)

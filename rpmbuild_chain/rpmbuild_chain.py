@@ -74,8 +74,8 @@ def parse_args(argv):
     parser = argparse.ArgumentParser(
             formatter_class=argparse.ArgumentDefaultsHelpFormatter,
             description=__doc__)
-    parser.add_argument('--srpms', nargs='+',
-            help='Input SRPM files to build. Use "-" to read list from STDIN')
+    parser.add_argument('--srpms', nargs='+', default=[],
+            help='Input SRPM files to build. If directory, recursively scan for RPMs. Use "-" to read list from STDIN')
     parser.add_argument('--user', required=True,
             help='Non-privileged user to run rpmbuild')
     parser.add_argument('--repo-path', default='rpmbuild-chain',
@@ -84,6 +84,10 @@ def parse_args(argv):
             help='Name for the YUM repository configuration')
     parser.add_argument('--build-path',
             help='Directory to build the RPMs in. Use tmpfs for faster builds. Default: tmpdir')
+    parser.add_argument('--order', nargs='+', default=[],
+            help='Package build order, given by list of package names')
+    parser.add_argument('--order-files', nargs='+', default=[],
+            type=argparse.FileType('r'), help='Read --order from files')
     parser.add_argument('--no-rollback-builddep', action='store_true',
             help='Do not automatically rollback installed RPM BuildRequires')
     parser.add_argument('--keep-repo-config', action='store_true',
@@ -363,9 +367,9 @@ class RPMBuild(object):
         for subdir in ['BUILD', 'BUILDROOT', 'SOURCES']:
             os.rmdir(subdir)
         for subdir in ['RPMS', 'SRPMS', 'SPECS']:
-            for dpath, dnames, fnames in os.walk(subdir):
-                for fname in fnames:
-                    shutil.move(os.path.join(dpath, fname), '.')
+            for root, subdirs, files in sorted(os.walk(subdir)):
+                for filename in sorted(files):
+                    shutil.move(os.path.join(root, filename), '.')
             shutil.rmtree(subdir)
 
     def copy_prebuilt_rpm(self):
@@ -401,6 +405,34 @@ class RPMBuild_Chain(object):
 
         self.history_path = os.path.join(self.build_path, 'RPM_HISTORY_ID')
         self.use_dnf = cmd_exists('dnf')
+
+    def list_rpms(self, rpm_paths):
+        results = []
+        for rpm_path in rpm_paths:
+            if os.path.isdir(rpm_path):
+                for root, subdirs, files in sorted(os.walk(rpm_path)):
+                    for filename in sorted(files):
+                        if filename.endswith('.rpm'):
+                            results.append(os.path.join(root, filename))
+            else:
+                if not rpm_path.endswith('.rpm'):
+                    raise ValueError('Not a valid RPM file: {}'.format(filepath))
+                results.append(rpm_path)
+        return results
+
+    def order_srpms(self, srpms, order):
+        order_idx = {pkg:idx for idx,pkg in enumerate(order)}
+        indexed = []
+        unordered = []
+        print(order_idx)
+        for srpm in srpms:
+            _, pkg = self.user.run_cmd(['rpm', '-qp', '--qf', '%{NAME}', srpm])
+            if pkg in order_idx:
+                indexed.append((order_idx[pkg], srpm))
+            else:
+                unordered.append(srpm)
+            print(indexed, unordered)
+        return [srpm for idx, srpm in sorted(indexed)] + unordered
 
     def repo_create(self):
         self.user.run_cmd(['createrepo_c', '--excludes=_failed/*', self.repo_path])
@@ -448,7 +480,9 @@ class RPMBuild_Chain(object):
         logging.info('{}: Done'.format(pkg))
         return pkg
 
-    def build_srpms(self, filepaths):
+    def build_srpms(self, filepaths, order=None):
+        order = order if order else []
+        filepaths = self.order_srpms(self.list_rpms(filepaths), order)
         logging.info('Starting build...')
         logging.info('Paramaters: {}'.format(pprint.pprint(vars(self))))
         n_pkgs = 0
@@ -555,6 +589,8 @@ def main(args):
 
     if args.srpms == ['-']:
         args.srpms = [line.rstrip() for line in sys.stdin]
+    for order_file in args.order_files:
+        args.order.extend(order_file.read().splitlines())
 
     run_as_user = RunAsUser(args.user)
     run_as_root = RunAsUser('root')
@@ -578,7 +614,7 @@ def main(args):
             keep_repo_config=args.keep_repo_config,
             allow_scriptlets=args.allow_scriptlets,
             plugins=plugins)
-    rpmbuilder.build_srpms(args.srpms)
+    rpmbuilder.build_srpms(args.srpms, order=args.order)
 
 
 def cli():

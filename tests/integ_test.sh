@@ -6,10 +6,10 @@ echo "Running test build..."
 rm -rf build/integ/
 sudo rm -f /etc/yum.repos.d/rpmbuild-chain.repo
 sudo rpm -e pkg{A,B,C} || true
-for f in tests/specs/standard/*; do
+for f in tests/specs/standard/*.spec; do
 	rpmbuild --define "_topdir $(pwd)/build/integ/input" -bs $f
 done
-sudo python -m rpmbuild_chain --verbose --user $USER --repo-path build/integ/output --hookdir tests/hookdir --lint --srpms build/integ/input/SRPMS/pkg*.src.rpm
+sudo python -m rpmbuild_chain --verbose --user $USER --repo-path build/integ/output --hookdir tests/hookdir --lint --srpms build/integ/input/SRPMS --order-file tests/specs/standard/order
 
 cd build/integ/output
 for pkg in pkg{A,B,C,D,E}; do
