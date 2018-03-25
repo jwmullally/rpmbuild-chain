@@ -292,16 +292,16 @@ class RPMHistoryRollback(object):
                     _, output = self.root.run_cmd(['yum', 'history', 'info'])
                 self.tx_id = int(re.search('^Transaction ID .* ([0-9]+)$', output, re.M).groups()[0])
                 with open(self.history_path, 'w') as history_file:
-                    history_file.write(self.tx_id)
+                    history_file.write(str(self.tx_id))
                 logging.info('Saved current RPM transaction ID: {}'.format(self.tx_id))
 
     def __exit__(self, *args):
         if self.active:
             logging.info('Rolling back installed packages to RPM transaction ID: {}'.format(self.tx_id))
             if self.use_dnf:
-                self.root.run_cmd(['dnf', 'history', '-y', 'rollback', self.tx_id])
+                self.root.run_cmd(['dnf', 'history', '-y', 'rollback', str(self.tx_id)])
             else:
-                self.root.run_cmd(['yum', 'history', '-y', 'rollback', self.tx_id])
+                self.root.run_cmd(['yum', 'history', '-y', 'rollback', str(self.tx_id)])
             os.remove(self.history_path)
 
 
@@ -467,7 +467,7 @@ class RPMBuild_Chain(object):
             topdir = os.path.join(self.build_path, pkg)
             mkdir(topdir, erase=True)
             try:
-                RPMBuild(topdir, pkg, filepath, self.user, self.root, self.plugins).run()
+                RPMBuild(topdir, pkg, filepath, self.user, self.root, self.plugins, self.allow_scriptlets, self.use_dnf).run()
             except:
                 mkdir(os.path.join(self.repo_path, '_failed'))
                 failed_dest = os.path.join(self.repo_path, '_failed', pkg)
@@ -491,7 +491,7 @@ class RPMBuild_Chain(object):
             mkdir(self.repo_path)
             mkdir(self.build_path, erase=True)
             self.repo_create()
-            with RPMHistoryRollback(self.history_path, self.root, not self.no_rollback_builddep):
+            with RPMHistoryRollback(self.history_path, self.root, self.use_dnf, not self.no_rollback_builddep):
                 with YUMRepoConfig(self.repo_name, self.repo_path):
                     self.plugins.run('pre_run', self.repo_path)
                     for filepath in filepaths:
