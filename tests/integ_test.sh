@@ -27,6 +27,7 @@ for pkg in pkg{A,B,C,D,E}; do
     cd ..
 done
 [ -f pre_run.test ]
+[ -f repos.log ]
 [ -f post_run.test ]
 
 echo "All tests passed"

@@ -440,7 +440,7 @@ class RPMBuild_Chain(object):
     def repo_update(self):
         self.user.run_cmd(['createrepo_c', '--excludes=_failed/*', '--update', self.repo_path])
 
-    def repo_list(self):
+    def repo_contents(self):
         rc, output = self.user.run_cmd(['repoquery', '-qa', '--repoid={}'.format(self.repo_name)])
         return output
 
@@ -502,7 +502,7 @@ class RPMBuild_Chain(object):
                             logging.exception('Failed to build "{}"'.format(filepath))
                             raise
                     self.plugins.run('post_run', self.repo_path)
-                    logging.info('Built packages:\n{}'.format(self.repo_list()))
+                    logging.info('Built packages:\n{}'.format(self.repo_contents()))
             os.rmdir(self.build_path)
         time_end = datetime.datetime.now()
         logging.info('Built {} packages in {}'.format(n_pkgs, time_end - time_start))
@@ -580,6 +580,16 @@ class Plugin_Lint(Plugin):
             self.user.run_cmd(['rpmlint'] + glob.glob('*.rpm'), outfile=rpmlint_log)
 
 
+class Plugin_RepoList(Plugin):
+
+    def pre_run(self):
+        with open('repos.log', 'w') as repos_log:
+            if cmd_exists('dnf'):
+                self.user.run_cmd(['dnf', '-v', 'repolist', 'enabled'], outfile=repos_log)
+            else:
+                self.user.run_cmd(['yum', '-v', 'repolist', 'enabled'], outfile=repos_log)
+
+
 def main(args):
     logging.basicConfig(level=args.loglevel)
     logging.info('Called with {}'.format(args))
@@ -598,6 +608,7 @@ def main(args):
     plugins = [
             Plugin_ParsedSpec(run_as_user),
             Plugin_PackageState(run_as_user),
+            Plugin_RepoList(run_as_root),
             ]
     for hookdir in args.hookdir:
         plugins.append(Plugin_HookDir(run_as_user, hookdir))
