@@ -1,4 +1,5 @@
 import re
+import os
 from setuptools import setup
 
 def get_version():
@@ -9,8 +10,28 @@ def get_version():
     else:
         raise RuntimeError('Unable to find version string')
 
+here = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
+    long_description = f.read()
+
 setup(
     name='rpmbuild-chain',
+    version=get_version(),
+    description='Build a series of SRPMs with rpmbuild',
+    long_description=long_description,
+    url='https://github.com/jwmullally/rpmbuild-chain',
+    author='Joseph Mullally',
+    author_email='jwmullally@gmail.com',
+    license='MIT',
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Developers',
+        'Topic :: Software Development :: Build Tools',
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+    ],
     packages=['rpmbuild_chain'],
     install_requires=[
         ],
@@ -18,7 +39,6 @@ setup(
     tests_require=[
         'nose',
         ],
-    version=get_version(),
     entry_points={
         'console_scripts': [
             'rpmbuild-chain = rpmbuild_chain.rpmbuild_chain:cli'

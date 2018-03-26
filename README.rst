@@ -32,6 +32,8 @@ Status
 **BETA**. All necessary functionality should be there. After test running
 for a while I'll bump it to version 1.0.
 
+PyPI: https://pypi.python.org/pypi/rpmbuild-chain
+
 Usage
 -----
 
