@@ -1,4 +1,5 @@
-# rpmbuild-chain
+rpmbuild-chain
+==============
 
 This program builds a series of SRPMs with rpmbuild.
 
@@ -25,8 +26,16 @@ This program must be run as "root" in order to install any missing build
 dependencies. All other commands (e.g. rpmbuild) are executed under the
 specified non-root user to improve security.
 
+Status
+------
 
-## Usage
+**BETA**. All necessary functionality should be there. After test running
+for a while I'll bump it to version 1.0.
+
+Usage
+-----
+
+::
 
     usage: rpmbuild-chain [-h] [--srpms SRPMS [SRPMS ...]] --user USER
                        [--repo-path REPO_PATH] [--repo-name REPO_NAME]
@@ -73,17 +82,19 @@ specified non-root user to improve security.
       --version             show program's version number and exit
 
 
-## Contributions
+Contributions
+-------------
 
 Patches for fixes are welcome.
 
 - Run "make integ" before opening a pull request. You will be prompted to run sudo to execute the test.
 
 
-## Author
+Author
+------
 
 Copyright (C) 2018 Joseph Mullally
 
-License: [MIT](./LICENCE)
+License: MIT
 
 Project: https://github.com/jwmullally/rpmbuild-chain
