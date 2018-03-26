@@ -484,7 +484,9 @@ class RPMBuild_Chain(object):
         order = order if order else []
         filepaths = self.order_srpms(self.list_rpms(filepaths), order)
         logging.info('Starting build...')
-        logging.info('Paramaters: {}'.format(pprint.pprint(vars(self))))
+        logging.info('Paramaters: {}'.format(pprint.pformat(vars(self))))
+        logging.info('Filepaths: {}'.format(filepaths))
+        logging.info('Order: {}'.format(order))
         n_pkgs = 0
         time_start = datetime.datetime.now()
         with SetEUID(self.user.uid, self.user.gid):
@@ -513,6 +515,9 @@ class Plugins(object):
     def __init__(self, plugins=None):
         self.plugins = list(plugins) if plugins else []
 
+    def __repr__(self):
+        return '{}({})'.format(self.__class__.__name__, self.plugins)
+
     def run(self, hook, cwd, *args):
         logging.debug('Running {} hooks...'.format(hook))
         for plugin in self.plugins:
@@ -532,6 +537,9 @@ class Plugin(object):
 
     def __init__(self, run_as_user):
         self.user = run_as_user
+
+    def __repr__(self):
+        return '<{} object at {}>'.format(self.__class__.__name__, hex(id(self)))
 
     def run(self, hook, *args):
         func = getattr(self, hook, None)
