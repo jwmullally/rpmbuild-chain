@@ -196,6 +196,9 @@ def cmd_exists(cmd):
             )
 
 
+USE_DNF = cmd_exists('dnf')
+
+
 def mkdir(path, erase=True):
     if os.path.exists(path) and erase == True:
         shutil.rmtree(path)
@@ -272,10 +275,9 @@ metadata_expire=0
 
 class RPMHistoryRollback(object):
 
-    def __init__(self, history_path, root=None, use_dnf=True, active=False):
+    def __init__(self, history_path, root=None, active=False):
         self.history_path = history_path
         self.root = root if root else RunAsUser('root')
-        self.use_dnf = bool(use_dnf)
         self.active = bool(active)
 
     def __enter__(self):
@@ -286,7 +288,7 @@ class RPMHistoryRollback(object):
                     self.tx_id = int(history_file.read())
                 logging.info('Read RPM transaction ID from previous run: {}'.format(self.tx_id))
             else:
-                if self.use_dnf:
+                if USE_DNF:
                     _, output = self.root.run_cmd(['dnf', 'history', 'info'])
                 else:
                     _, output = self.root.run_cmd(['yum', 'history', 'info'])
@@ -298,7 +300,7 @@ class RPMHistoryRollback(object):
     def __exit__(self, *args):
         if self.active:
             logging.info('Rolling back installed packages to RPM transaction ID: {}'.format(self.tx_id))
-            if self.use_dnf:
+            if USE_DNF:
                 self.root.run_cmd(['dnf', 'history', '-y', 'rollback', str(self.tx_id)])
             else:
                 self.root.run_cmd(['yum', 'history', '-y', 'rollback', str(self.tx_id)])
@@ -306,7 +308,7 @@ class RPMHistoryRollback(object):
 
 
 class RPMBuild(object):
-    def __init__(self, topdir, pkg, filepath, user, root, plugins, allow_scriptlets=False, use_dnf=False):
+    def __init__(self, topdir, pkg, filepath, user, root, plugins, allow_scriptlets=False):
         self.topdir = os.path.abspath(topdir)
         self.pkg = pkg
         if not os.path.exists(filepath):
@@ -318,7 +320,6 @@ class RPMBuild(object):
         self.root = root
         self.plugins = plugins
         self.allow_scriptlets = bool(allow_scriptlets)
-        self.use_dnf = bool(use_dnf)
 
     def run(self):
         with CWD(self.topdir):
@@ -352,7 +353,7 @@ class RPMBuild(object):
         self.user.run_cmd(['rpmbuild'] + rpm_opts + ['-bs', spec])
         new_srpm = glob.glob('SRPMS/*')[0]
 
-        if self.use_dnf:
+        if USE_DNF:
             self.root.run_cmd(['dnf', 'builddep', '-y', new_srpm])
         else:
             self.root.run_cmd(['yum-builddep', '-y', new_srpm])
@@ -404,7 +405,6 @@ class RPMBuild_Chain(object):
         self.plugins = Plugins(plugins)
 
         self.history_path = os.path.join(self.build_path, 'RPM_HISTORY_ID')
-        self.use_dnf = cmd_exists('dnf')
 
     def list_rpms(self, rpm_paths):
         results = []
@@ -467,7 +467,7 @@ class RPMBuild_Chain(object):
             topdir = os.path.join(self.build_path, pkg)
             mkdir(topdir, erase=True)
             try:
-                RPMBuild(topdir, pkg, filepath, self.user, self.root, self.plugins, self.allow_scriptlets, self.use_dnf).run()
+                RPMBuild(topdir, pkg, filepath, self.user, self.root, self.plugins, self.allow_scriptlets).run()
             except:
                 mkdir(os.path.join(self.repo_path, '_failed'))
                 failed_dest = os.path.join(self.repo_path, '_failed', pkg)
@@ -491,7 +491,7 @@ class RPMBuild_Chain(object):
             mkdir(self.repo_path)
             mkdir(self.build_path, erase=True)
             self.repo_create()
-            with RPMHistoryRollback(self.history_path, self.root, self.use_dnf, not self.no_rollback_builddep):
+            with RPMHistoryRollback(self.history_path, self.root, not self.no_rollback_builddep):
                 with YUMRepoConfig(self.repo_name, self.repo_path):
                     self.plugins.run('pre_run', self.repo_path)
                     for filepath in filepaths:
@@ -584,7 +584,7 @@ class Plugin_RepoList(Plugin):
 
     def pre_run(self):
         with open('repos.log', 'w') as repos_log:
-            if cmd_exists('dnf'):
+            if USE_DNF:
                 self.user.run_cmd(['dnf', '-v', 'repolist', 'enabled'], outfile=repos_log)
             else:
                 self.user.run_cmd(['yum', '-v', 'repolist', 'enabled'], outfile=repos_log)
