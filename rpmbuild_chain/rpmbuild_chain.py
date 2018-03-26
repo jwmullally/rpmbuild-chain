@@ -94,7 +94,7 @@ def parse_args(argv):
             help='Keep YUM repository configured after exiting')
     parser.add_argument('--allow-scriptlets', action='store_true',
             help='Do not abort if RPM scriptlets are found. Warning: scriptlets will be run as root when package is installed')
-    parser.add_argument('--hookdir', nargs='+',
+    parser.add_argument('--hookdir', nargs='+', default=[],
             help='Hook script directory(s). Valid subdirectories: {}'.format(' '.join(Plugin.VALID_HOOKS)))
     parser.add_argument('--lint', action='store_true',
             help='Run rpmlint on every package')
@@ -199,7 +199,7 @@ def cmd_exists(cmd):
 USE_DNF = cmd_exists('dnf')
 
 
-def mkdir(path, erase=True):
+def mkdir(path, erase=False):
     if os.path.exists(path) and erase == True:
         shutil.rmtree(path)
     if not os.path.isdir(path):
@@ -424,14 +424,12 @@ class RPMBuild_Chain(object):
         order_idx = {pkg:idx for idx,pkg in enumerate(order)}
         indexed = []
         unordered = []
-        print(order_idx)
         for srpm in srpms:
             _, pkg = self.user.run_cmd(['rpm', '-qp', '--qf', '%{NAME}', srpm])
             if pkg in order_idx:
                 indexed.append((order_idx[pkg], srpm))
             else:
                 unordered.append(srpm)
-            print(indexed, unordered)
         return [srpm for idx, srpm in sorted(indexed)] + unordered
 
     def repo_create(self):
@@ -494,7 +492,7 @@ class RPMBuild_Chain(object):
             mkdir(self.build_path, erase=True)
             self.repo_create()
             with RPMHistoryRollback(self.history_path, self.root, not self.no_rollback_builddep):
-                with YUMRepoConfig(self.repo_name, self.repo_path):
+                with YUMRepoConfig(self.repo_name, self.repo_path, self.keep_repo_config):
                     self.plugins.run('pre_run', self.repo_path)
                     for filepath in filepaths:
                         try:
@@ -591,7 +589,7 @@ class Plugin_Lint(Plugin):
 class Plugin_RepoList(Plugin):
 
     def pre_run(self):
-        with open('repos.log', 'w') as repos_log:
+        with open('repolist.log', 'w') as repos_log:
             if USE_DNF:
                 self.user.run_cmd(['dnf', '-v', 'repolist', 'enabled'], outfile=repos_log)
             else:
